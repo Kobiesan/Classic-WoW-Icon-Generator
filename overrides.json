@@ -1,0 +1,45 @@
+{
+  "_comment": [
+    "Hand-written caption corrections, applied after the automatic filename parse.",
+    "Keys are fnmatch patterns (case-insensitive) matched against the filename,",
+    "with or without the .blp extension. Rules apply top to bottom, later wins.",
+    "A value can be:",
+    "  \"a, b\"                     -> replace the subject terms",
+    "  [\"a\", \"b\"]                 -> the same, as a list",
+    "  {\"category\": \"...\",         -> replace the detected category",
+    "   \"terms\": [...],            -> replace the subject terms",
+    "   \"add_terms\": [...],        -> append terms",
+    "   \"drop_terms\": [...]}       -> remove terms",
+    "Keys starting with _ are ignored, so notes like this one are safe to keep."
+  ],
+
+  "Trade_Engraving*": {
+    "category": "profession",
+    "terms": ["enchanting", "glowing rune"]
+  },
+  "Trade_BlackSmithing*": { "terms": ["blacksmithing", "anvil and hammer"] },
+  "Trade_LeatherWorking*": { "terms": ["leatherworking"] },
+  "Trade_BrewPoison*": { "terms": ["poison making", "vial"] },
+  "Trade_Herbalism*": { "add_terms": ["plant"] },
+
+  "INV_Misc_QuestionMark": {
+    "category": "ui",
+    "terms": ["question mark", "placeholder icon"]
+  },
+
+  "INV_Potion_*": { "add_terms": ["glass vial"] },
+  "INV_Drink_*": { "add_terms": ["tankard"] },
+  "INV_Enchant_*": { "category": "reagent", "drop_terms": ["enchant"] },
+  "INV_Misc_Gem_*": { "add_terms": ["cut gemstone"] },
+  "INV_Jewelry_Talisman_*": { "category": "jewelry" },
+
+  "INV_BannerPVP_*": { "category": "banner", "terms": ["pvp banner"] },
+  "Achievement_Zone_*": { "add_terms": ["landscape"] },
+  "Achievement_BG_winWSG": { "terms": ["warsong gulch", "victory"] },
+
+  "Spell_Shadow_*": { "add_terms": ["dark purple glow"] },
+  "Spell_Fire_*": { "add_terms": ["flames"] },
+  "Spell_Frost_*": { "add_terms": ["ice"] },
+
+  "Ability_Mount_*": { "category": "mount" }
+}
