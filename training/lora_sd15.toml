@@ -1,0 +1,112 @@
+# sd-scripts training config for the WoW icon LoRA (SD 1.5, 512px).
+#
+#   accelerate launch train_network.py \
+#       --config_file    training/lora_sd15.toml \
+#       --dataset_config training/dataset_sd15.toml
+#
+# Keys here mirror train_network.py's command line flags. Anything passed on
+# the command line wins over the value in this file, which is handy for sweeps:
+#   ... --config_file training/lora_sd15.toml --network_dim 64
+#
+# The numbers below are a starting point chosen for ~4,000 icons at 512px on a
+# 12 GB card. See training/README.md for what to turn first and what each
+# failure mode looks like.
+
+# --- base model ------------------------------------------------------------
+# A local .safetensors path also works, and is faster than a hub round trip.
+pretrained_model_name_or_path = "runwayml/stable-diffusion-v1-5"
+v2 = false
+v_parameterization = false
+
+# SD 1.5 was trained with the final CLIP layer, so clip_skip = 1 is correct
+# here. Use 2 only if you switch to an anime-lineage base model (NAI descended
+# checkpoints) that expects it.
+clip_skip = 1
+
+# --- output ----------------------------------------------------------------
+output_dir = "dataset/model"
+output_name = "wowicon_lora_v1"
+save_model_as = "safetensors"
+save_precision = "fp16"
+
+# One checkpoint per epoch. Disk is cheap (~18 MB each at dim 32) and having
+# every epoch on hand is the whole point of watching quality per epoch --
+# picking epoch 6 after the fact is normal and expected.
+save_every_n_epochs = 1
+
+# --- LoRA shape ------------------------------------------------------------
+network_module = "networks.lora"
+
+# dim 32 / alpha 16 (alpha = dim/2) is a solid middle for a style LoRA that
+# also has to carry subject variety. Icons are small, flat and repetitive, so
+# dim 128 is almost always wasted capacity that just memorises faster.
+network_dim = 32
+network_alpha = 16
+
+# Train both the U-Net and the text encoder. The text encoder matters here
+# because the captions carry a real vocabulary (categories, subject terms)
+# rather than a single trigger word.
+network_train_unet_only = false
+network_train_text_encoder_only = false
+
+# --- optimisation ----------------------------------------------------------
+learning_rate = 1e-4
+unet_lr = 1e-4
+
+# The text encoder is trained at half the U-Net rate. Higher and it starts to
+# overwrite what "sword" or "potion" already mean in CLIP, which shows up as
+# the LoRA hijacking those words in unrelated prompts.
+text_encoder_lr = 5e-5
+
+optimizer_type = "AdamW8bit"
+lr_scheduler = "cosine_with_restarts"
+lr_scheduler_num_cycles = 3
+lr_warmup_steps = 500
+
+max_train_epochs = 10
+max_grad_norm = 1.0
+seed = 42
+
+# Weights the loss by signal-to-noise ratio. Cheap, and it noticeably steadies
+# the early epochs. 5 is the value from the paper and a fine default.
+min_snr_gamma = 5
+
+# Icons sit on very dark, near-black backgrounds, which is exactly the case
+# where SD's zero-terminal-SNR problem shows up as washed-out samples. Try this
+# if generated icons look milky compared to the training art.
+# noise_offset = 0.0357
+
+# --- performance -----------------------------------------------------------
+mixed_precision = "fp16"
+
+# Scaled dot-product attention ships with torch 2.x, so there is no xformers
+# install to get wrong. Swap to xformers = true if you are on torch 1.x.
+sdpa = true
+xformers = false
+
+# The dataset never changes between epochs (no flip, no color aug), so latents
+# can be encoded once and reused. This is the single biggest speedup available
+# and it costs about 1.5 GB on disk for 4,000 icons.
+cache_latents = true
+cache_latents_to_disk = true
+
+max_data_loader_n_workers = 2
+persistent_data_loader_workers = true
+
+# Uncomment on a card below ~10 GB. Costs roughly 20-30% speed, buys a lot of
+# VRAM back; alternatively drop batch_size in dataset_sd15.toml to 2.
+# gradient_checkpointing = true
+
+# --- per-epoch samples -----------------------------------------------------
+# This is the quality-watching loop: after every epoch, sd-scripts renders the
+# prompts in sample_prompts.txt into output_dir/sample/ with the epoch number
+# in the filename. Each prompt pins its own seed, so flipping through the
+# images in order shows the LoRA converging (and then overcooking).
+sample_every_n_epochs = 1
+sample_prompts = "training/sample_prompts.txt"
+sample_sampler = "euler_a"
+
+# --- logging ---------------------------------------------------------------
+logging_dir = "dataset/log"
+log_with = "tensorboard"
+log_prefix = "wowicon_"
