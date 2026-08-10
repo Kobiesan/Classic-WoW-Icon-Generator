@@ -1,0 +1,55 @@
+<Window x:Class="WowIconForge.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="WoW Icon Forge"
+        Height="720"
+        Width="1100"
+        MinHeight="600"
+        MinWidth="900">
+
+    <!--
+        UI scaffold only: this phase implemented Core and its tests, per the
+        agreed starting scope. The controls the finished window needs are listed
+        below so the layout work has a checklist to build against.
+
+        Left column  : prompt, negative prompt, seed (+ randomize), steps, CFG,
+                       batch count, Generate / Cancel, progress.
+        Right column : 2x4 results grid, 64x64 previews at 4x zoom with
+                       RenderOptions.BitmapScalingMode="NearestNeighbor" so the
+                       pixels stay crisp; per-result Save PNG / Save BLP / Copy /
+                       Regenerate with this seed.
+        Settings pane: model directory, template file, output directory,
+                       sharpening amount, trigger word.
+        First run    : wizard when ModelLayout.Probe(...).NeedsFirstRunWizard,
+                       using ModelDirectoryStatus.ToUserMessage() as the copy.
+    -->
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="WoW Icon Forge"
+                   FontSize="22"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,12" />
+
+        <Border Grid.Row="1"
+                BorderBrush="#FFCCCCCC"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="24">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="Core is implemented and tested; the interface is the next phase."
+                           FontSize="14"
+                           TextAlignment="Center" />
+                <TextBlock Text="Generation, compositing and PNG/BLP export already work against the stub generator."
+                           Foreground="#FF666666"
+                           Margin="0,8,0,0"
+                           TextAlignment="Center" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

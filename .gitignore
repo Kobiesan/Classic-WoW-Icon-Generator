@@ -11,3 +11,12 @@ venv/
 dataset/
 *.blp
 *.png
+
+# Visual Studio / .NET
+bin/
+obj/
+.vs/
+*.user
+*.suo
+[Dd]ebug/
+[Rr]elease/

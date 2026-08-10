@@ -1,0 +1,46 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34728.123
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{530DA86F-8FE2-52F6-905B-7DD3CCD02591}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{82D6BB3C-5962-58FD-A95E-D7865ACE3A7C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WowIconForge.Core", "src\WowIconForge.Core\WowIconForge.Core.csproj", "{223A8E0E-32FE-501C-B907-B07A45D27349}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WowIconForge.App", "src\WowIconForge.App\WowIconForge.App.csproj", "{CD5C807A-C6D5-5B67-AEAC-E8706286892A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WowIconForge.Core.Tests", "tests\WowIconForge.Core.Tests\WowIconForge.Core.Tests.csproj", "{DD135F81-DF5B-5AED-B85B-E04D391744AD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{223A8E0E-32FE-501C-B907-B07A45D27349}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{223A8E0E-32FE-501C-B907-B07A45D27349}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{223A8E0E-32FE-501C-B907-B07A45D27349}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{223A8E0E-32FE-501C-B907-B07A45D27349}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD5C807A-C6D5-5B67-AEAC-E8706286892A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD5C807A-C6D5-5B67-AEAC-E8706286892A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD5C807A-C6D5-5B67-AEAC-E8706286892A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD5C807A-C6D5-5B67-AEAC-E8706286892A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD135F81-DF5B-5AED-B85B-E04D391744AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD135F81-DF5B-5AED-B85B-E04D391744AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD135F81-DF5B-5AED-B85B-E04D391744AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD135F81-DF5B-5AED-B85B-E04D391744AD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = postSolution
+		{223A8E0E-32FE-501C-B907-B07A45D27349} = {530DA86F-8FE2-52F6-905B-7DD3CCD02591}
+		{CD5C807A-C6D5-5B67-AEAC-E8706286892A} = {530DA86F-8FE2-52F6-905B-7DD3CCD02591}
+		{DD135F81-DF5B-5AED-B85B-E04D391744AD} = {82D6BB3C-5962-58FD-A95E-D7865ACE3A7C}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EBA9F5F6-9AC3-5B1C-B0BA-F0DEE627B44E}
+	EndGlobalSection
+EndGlobal
