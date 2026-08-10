@@ -1,22 +1,26 @@
 [project]
 name = "wowicons"
-version = "0.2.0"
+version = "0.3.0"
 description = "Build a kohya_ss Stable Diffusion LoRA dataset from WoW .blp icons"
 requires-python = ">=3.9"
 dependencies = ["Pillow>=10.0"]
 
-[project.optional-dependencies]
-dev = ["pytest>=7.0"]
-
 [project.scripts]
 wowicons = "wowicons.cli:main"
+wowicons-gui = "wowicons.gui.app:main"
 
 [build-system]
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+# Real image generation. Install PyTorch first, matched to your GPU:
+#   https://pytorch.org/get-started/locally/
+generate = ["diffusers>=0.27", "transformers>=4.38", "accelerate>=0.28", "safetensors>=0.4"]
+
 [tool.setuptools]
-packages = ["wowicons"]
+packages = ["wowicons", "wowicons.gui"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
