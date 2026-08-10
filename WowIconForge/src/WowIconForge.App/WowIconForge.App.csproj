@@ -10,10 +10,57 @@
     <!-- Icons are previewed at 4x with nearest-neighbour scaling; per-monitor
          DPI awareness keeps that crisp on high-DPI displays. -->
     <SupportedOSPlatformVersion>10.0.18362.0</SupportedOSPlatformVersion>
+
+    <Version>0.1.0</Version>
+    <Company>WowIconForge</Company>
+    <Product>WoW Icon Forge</Product>
+
+    <!-- Publish defaults: see publish.ps1. Self-contained so the user needs no
+         .NET install, win-x64 because DirectML is Windows-only anyway.
+         NOT single-file: ONNX Runtime and DirectML load native libraries by
+         name, and bundling them into a single file forces an extract-to-temp
+         dance that is slower and breaks GPU enumeration on some drivers. -->
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
+    <SelfContained Condition="'$(SelfContained)' == ''">true</SelfContained>
+    <PublishSingleFile>false</PublishSingleFile>
+    <PublishReadyToRun Condition="'$(Configuration)' == 'Release'">true</PublishReadyToRun>
+    <!-- Trimming is off: ONNX Runtime and WPF both resolve types by reflection,
+         and a trimmed build fails at runtime rather than at publish. -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\WowIconForge.Core\WowIconForge.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Direct reference on purpose, even though Core already pulls this in
+         transitively via Microsoft.ML.OnnxRuntime.DirectML.
+         Microsoft.AI.DirectML ships DirectML.dll under bin\x64-win rather than
+         runtimes\<rid>\native, so NuGet's automatic native-asset copying does
+         not see it; the copy lives in the package's build\*.targets, and NuGet
+         imports those only for DIRECT references. Without this line the publish
+         output silently omits DirectML.dll and the GPU path fails at runtime on
+         the user's machine. Verified: adding it publishes the 18 MB DLL. -->
+    <PackageReference Include="Microsoft.AI.DirectML" Version="1.15.4" />
+  </ItemGroup>
+
+  <Target Name="VerifyDirectMLWasPublished" AfterTargets="Publish"
+          Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <!-- Turn a silent runtime failure into a build failure. -->
+    <Error Condition="!Exists('$(PublishDir)DirectML.dll')"
+           Text="DirectML.dll is missing from the publish output ($(PublishDir)). The DirectML execution provider will fail at runtime. Check the Microsoft.AI.DirectML PackageReference." />
+    <Error Condition="!Exists('$(PublishDir)onnxruntime.dll')"
+           Text="onnxruntime.dll is missing from the publish output ($(PublishDir)). Inference cannot start." />
+    <Message Importance="high" Text="Publish check: DirectML.dll and onnxruntime.dll present." />
+  </Target>
+
+  <ItemGroup>
+    <!-- The first-run wizard reads this from beside the executable. -->
+    <Content Include="..\..\model-sources.json" Link="model-sources.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>
