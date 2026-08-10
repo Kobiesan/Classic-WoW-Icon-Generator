@@ -132,6 +132,23 @@ hints to some spell schools.
 Undecodable files and undersized icons are reported at the end, with counts and
 examples, rather than aborting the run.
 
+## Training
+
+Ready-to-run kohya_ss / sd-scripts config lives in [`training/`](training/),
+targeting SD 1.5 at 512×512 to match the dataset. Every setting is commented
+with the reasoning, and samples render after each epoch so quality is visible
+while the run is still going:
+
+```bash
+python -m wowicons.prompts --manifest dataset/manifest.csv \
+                           --output training/sample_prompts.txt
+SD_SCRIPTS=~/src/sd-scripts ./training/train_lora.sh
+```
+
+See [`training/README.md`](training/README.md) for the tuning order, what each
+failure mode looks like in the epoch samples, VRAM fallbacks, and the SDXL
+deltas.
+
 ## Module layout
 
 | Module | Responsibility |
@@ -140,6 +157,7 @@ examples, rather than aborting the run.
 | `wowicons/captions.py` | Filename → caption, plus overrides loading/applying. |
 | `wowicons/pipeline.py` | Walk, decode, upscale, write PNG/TXT, manifest, counts. |
 | `wowicons/cli.py` | argparse front end. |
+| `wowicons/prompts.py` | `manifest.csv` → `sample_prompts.txt` for per-epoch previews. |
 
 `blp.py` is deliberately isolated for the planned C# port: it has no
 third-party imports at module level (a test enforces this), keeps the header

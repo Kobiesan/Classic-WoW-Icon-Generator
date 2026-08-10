@@ -6,8 +6,9 @@ Modules:
 * :mod:`wowicons.captions` -- filename to caption parser plus overrides.
 * :mod:`wowicons.pipeline` -- decode, upscale, caption, manifest.
 * :mod:`wowicons.cli` -- argparse front end.
+* :mod:`wowicons.prompts` -- sample prompts for per-epoch training previews.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
-__all__ = ["blp", "captions", "cli", "pipeline"]
+__all__ = ["blp", "captions", "cli", "pipeline", "prompts"]

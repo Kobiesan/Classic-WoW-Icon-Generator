@@ -1,0 +1,54 @@
+# sd-scripts dataset config for the WoW icon LoRA (SD 1.5, 512px).
+#
+#   accelerate launch train_network.py --dataset_config training/dataset_sd15.toml ...
+#
+# Pass this with --dataset_config. When you do, sd-scripts reads the dataset
+# definition from here and IGNORES the "10_wowicon icon" repeat prefix in the
+# folder name -- that prefix is only parsed by the kohya_ss GUI's folder-scan
+# mode. num_repeats below is what actually counts.
+
+[general]
+caption_extension = ".txt"
+
+# Captions are comma-separated tags, so shuffling them stops the model from
+# leaning on tag order. keep_tokens = 1 pins the first tag ("wowicon") in place
+# so the trigger word never gets shuffled away from the front.
+shuffle_caption = true
+keep_tokens = 1
+
+# Optional: drop 10% of tags at random to loosen the tie between individual
+# terms and the style. Worth trying if the LoRA only fires on exact captions.
+# caption_tag_dropout_rate = 0.1
+
+# Icons are lit from the top-left almost without exception, and plenty of them
+# (swords, tools, hands) are asymmetric. Mirroring would teach the model that
+# the light comes from either side, which shows up as muddy, direction-less
+# shading. Leave this off.
+flip_aug = false
+
+# color_aug would fight the palette consistency that makes icons look like
+# icons, and it also disables latent caching. Off.
+color_aug = false
+
+[[datasets]]
+resolution = 512
+batch_size = 4
+
+# Every image the pipeline writes is exactly 512x512, so there is nothing for
+# the bucketing system to sort. Turning it off skips a pointless pre-pass.
+enable_bucket = false
+
+  [[datasets.subsets]]
+  image_dir = "dataset/img/10_wowicon icon"
+
+  # ~4,000 icons is already a large dataset by LoRA standards. The repeat
+  # counts you see in tutorials (10, 20, 40) exist to make 20-image character
+  # sets last a full epoch; applying them here would mean 40,000 samples per
+  # epoch for no benefit. One pass per epoch is correct at this scale.
+  #
+  # If you cut the dataset down to a few hundred icons, raise this so that
+  # images x num_repeats lands somewhere around 1,500-2,500 per epoch.
+  num_repeats = 1
+
+  # class_tokens is deliberately unset: it is only used for images that have no
+  # caption file, and every image here ships with a .txt sidecar.
