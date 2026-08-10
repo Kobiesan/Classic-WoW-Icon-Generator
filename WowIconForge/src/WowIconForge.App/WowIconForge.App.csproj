@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>WowIconForge.App</RootNamespace>
+    <AssemblyName>WowIconForge</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Icons are previewed at 4x with nearest-neighbour scaling; per-monitor
+         DPI awareness keeps that crisp on high-DPI displays. -->
+    <SupportedOSPlatformVersion>10.0.18362.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WowIconForge.Core\WowIconForge.Core.csproj" />
+  </ItemGroup>
+
+</Project>

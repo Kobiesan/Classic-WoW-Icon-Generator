@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>WowIconForge.Core</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- CS1591: not every public member needs an XML comment. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Resampling (Lanczos), PNG codec, and the pixel buffer type used across
+         the compositing pipeline. NOTE: ImageSharp 3.x ships under the Six
+         Labors Split License - free for open source and for companies under
+         $1M revenue, paid otherwise. See WowIconForge/README.md. -->
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+
+    <!-- DirectML execution provider (any DX12 GPU) plus the CPU fallback. The
+         package is Windows-native; the managed API it exposes is what Core
+         compiles against, so the library still builds anywhere. -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.24.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="WowIconForge.Core.Tests" />
+  </ItemGroup>
+
+</Project>
