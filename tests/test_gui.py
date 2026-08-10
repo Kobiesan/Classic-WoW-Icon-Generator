@@ -357,14 +357,22 @@ def test_generation_reports_a_missing_template(tmp_path):
     assert "Border template not found" in status.message
 
 
-def test_generation_works_without_a_template():
+def test_generation_without_a_template_uses_the_built_in_gold_frame():
     runner = JobRunner()
     settings = workflows.GenerateSettings(prompt="sword", steps=1, batch_count=1, force_stub=True)
     runner.start("gen", lambda handle: workflows.run_generation(handle, settings))
     wait_for(runner, 20)
 
-    results = next(e for e in drain_all(runner) if e.kind == "result").payload
-    assert results[0].icon.size == (64, 64)
+    events = drain_all(runner)
+    results = next(e for e in events if e.kind == "result").payload
+    icon = results[0].icon
+
+    assert icon.size == (64, 64)
+    # The built-in frame behaves like any template: transparent corners,
+    # art in the middle, and the log says which border was used.
+    assert icon.getpixel((0, 0))[3] == 0
+    assert icon.getpixel((32, 32))[3] == 255
+    assert any("built-in gold border" in e.message for e in events if e.kind == "log")
 
 
 def test_generation_can_be_cancelled():
@@ -493,6 +501,21 @@ def test_window_shows_results_grid(window, tmp_path):
     # 64px icon shown at 4x so the pixels stay crisp
     assert app._preview_images[0].width() == 64 * 4
     assert str(app.cancel_button.cget("state")) == "disabled"
+
+
+def test_window_uses_the_wow_palette(window):
+    from wowicons.gui import theme
+    from wowicons.gui.app import IconForgeApp
+
+    app = IconForgeApp(window)
+    window.update()
+
+    import tkinter.ttk as ttk_mod
+
+    assert str(window.cget("background")) == theme.PALETTE.background
+    assert ttk_mod.Style(window).theme_use() == "clam"
+    # Primary actions carry the gold accent style.
+    assert str(app.generate_button.cget("style")) == "Accent.TButton"
 
 
 def test_window_validates_before_starting(window, monkeypatch):

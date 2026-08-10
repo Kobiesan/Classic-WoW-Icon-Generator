@@ -10,7 +10,11 @@ pip install -r requirements.txt
 python -m wowicons.gui
 ```
 
-One window, three numbered tabs in the order you use them.
+One window, three numbered tabs in the order you use them, styled after the
+game's own interface - dark panels, parchment text, gold where it matters.
+
+**New here? [The getting-started guide](GETTING_STARTED.md) walks through
+everything from installing Python to saving your first BLP.**
 
 ![The Generate tab](docs/generate-tab.png)
 
@@ -27,9 +31,11 @@ rather than a stack trace, and the folders you pick are remembered.
 **The Generate tab works immediately**, before you have trained anything. With
 no model installed it runs in *preview mode*: the shapes are placeholders, but
 the border compositing, the 4x pixel-crisp previews, and PNG/BLP saving are all
-real. That is enough to set up your border template and check the pipeline end
-to end. Install PyTorch and diffusers, point Settings at a trained
-`.safetensors`, and the same button produces real art.
+real. Icons are framed with a built-in gold border drawn by the app itself (no
+game assets are shipped); point Settings at any 64x64 PNG with a transparent
+middle to use your own frame instead. Preview mode is enough to set up your
+frame and check the pipeline end to end; install PyTorch and diffusers, point
+Settings at a trained `.safetensors`, and the same button produces real art.
 
 ### Making generation real
 
@@ -206,6 +212,8 @@ deltas.
 | `wowicons/blp_writer.py` | BLP2 writer: palettized, 8-bit alpha, full mip chain. |
 | `wowicons/generate.py` | Generation backends: preview stub and Stable Diffusion. |
 | `wowicons/gui/` | The desktop app. `jobs`, `environment` and `workflows` are display-free. |
+| `wowicons/gui/theme.py` | The WoW-flavoured ttk theme: colours and fonts only. |
+| `wowicons/gui/assets.py` | The built-in gold border template, drawn with Pillow at runtime. |
 
 `blp.py` is deliberately isolated for the planned C# port: it has no
 third-party imports at module level (a test enforces this), keeps the header
@@ -220,10 +228,10 @@ its own image library there and can lift the rest as-is.
 python -m pytest
 ```
 
-321 tests. The window itself is exercised under a virtual display, so the
+328 tests. The window itself is exercised under a virtual display, so the
 results grid, validation messages and a full generate-and-render cycle are
 covered rather than assumed; on an interpreter without tkinter those tests skip
-and the other 283 still run.
+and the other 289 still run.
 
 The suite covers the parser against real `Interface/Icons` filenames, override
 handling, the decoder against synthesized BLP1/BLP2 payloads for every

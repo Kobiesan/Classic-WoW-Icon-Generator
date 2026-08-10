@@ -24,7 +24,7 @@ from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk
 
 from .. import compositing, generate
-from . import environment, workflows
+from . import environment, theme, workflows
 from .jobs import JobRunner, JobStatus
 
 __all__ = ["IconForgeApp", "main"]
@@ -44,6 +44,9 @@ class IconForgeApp:
         self.root.title(APP_TITLE)
         self.root.geometry("1040x760")
         self.root.minsize(900, 640)
+
+        # Theme before any widget exists, so everything picks the styles up.
+        self.palette = theme.apply(self.root)
 
         self.runner = JobRunner()
         self.settings: Dict[str, object] = self._load_settings()
@@ -109,13 +112,13 @@ class IconForgeApp:
         ttk.Label(
             frame,
             text="Turn a folder of WoW icon files into training material.",
-            font=("", 11, "bold"),
+            style="Heading.TLabel",
         ).grid(row=0, column=0, columnspan=3, sticky="w")
         ttk.Label(
             frame,
             text="You need .blp files extracted from a WoW client - normally the "
                  "Interface/Icons folder.",
-            foreground="#555555",
+            style="Subtle.TLabel",
             wraplength=900,
         ).grid(row=1, column=0, columnspan=3, sticky="w", pady=(2, 12))
 
@@ -139,7 +142,7 @@ class IconForgeApp:
         ttk.Label(size_row, text="pixels").pack(side="left")
 
         self.dataset_button = ttk.Button(
-            frame, text="Build dataset", command=self._start_dataset_build
+            frame, text="Build dataset", command=self._start_dataset_build, style="Accent.TButton"
         )
         self.dataset_button.grid(row=6, column=0, sticky="w")
         ttk.Button(
@@ -156,13 +159,13 @@ class IconForgeApp:
         frame = self.train_tab
 
         ttk.Label(
-            frame, text="Teach a model your icon style.", font=("", 11, "bold")
+            frame, text="Teach a model your icon style.", style="Heading.TLabel"
         ).grid(row=0, column=0, columnspan=3, sticky="w")
         ttk.Label(
             frame,
             text="Training needs a graphics card and takes a while. You can close "
                  "this tab and come back - it keeps running.",
-            foreground="#555555",
+            style="Subtle.TLabel",
             wraplength=900,
         ).grid(row=1, column=0, columnspan=3, sticky="w", pady=(2, 12))
 
@@ -187,7 +190,7 @@ class IconForgeApp:
         self.train_dim = self._add_spin(options, "Detail capacity", 32, 4, 256, 2)
 
         self.train_button = ttk.Button(
-            frame, text="Start training", command=self._start_training
+            frame, text="Start training", command=self._start_training, style="Accent.TButton"
         )
         self.train_button.grid(row=5, column=0, sticky="w")
         ttk.Button(
@@ -208,13 +211,15 @@ class IconForgeApp:
         left = ttk.Frame(frame)
         left.grid(row=0, column=0, sticky="nsw", padx=(0, 14))
 
-        ttk.Label(left, text="Describe your icon", font=("", 11, "bold")).pack(anchor="w")
+        ttk.Label(left, text="Describe your icon", style="Heading.TLabel").pack(anchor="w")
         self.prompt_text = tk.Text(left, width=38, height=4, wrap="word")
+        theme.style_text(self.prompt_text)
         self.prompt_text.pack(fill="x", pady=(4, 2))
         self.prompt_text.insert("1.0", "weapon, sword, glowing blue runes")
 
-        ttk.Label(left, text="Things to avoid (optional)", foreground="#555555").pack(anchor="w")
+        ttk.Label(left, text="Things to avoid (optional)", style="Subtle.TLabel").pack(anchor="w")
         self.negative_text = tk.Text(left, width=38, height=2, wrap="word")
+        theme.style_text(self.negative_text)
         self.negative_text.pack(fill="x", pady=(2, 8))
         self.negative_text.insert("1.0", "blurry, photo, text, watermark")
 
@@ -234,23 +239,25 @@ class IconForgeApp:
         self.batch_var = self._add_spin(grid, "How many", 4, 1, 8, 2, vertical=True)
 
         self.generate_button = ttk.Button(
-            left, text="Generate icons", command=self._start_generation
+            left, text="Generate icons", command=self._start_generation, style="Accent.TButton"
         )
         self.generate_button.pack(fill="x", pady=(6, 4))
 
-        self.backend_label = ttk.Label(left, text="", foreground="#555555", wraplength=280)
+        self.backend_label = ttk.Label(left, text="", style="Subtle.TLabel", wraplength=280)
         self.backend_label.pack(anchor="w", pady=(4, 0))
 
         right = ttk.Frame(frame)
         right.grid(row=0, column=1, sticky="nsew")
-        ttk.Label(right, text="Results", font=("", 11, "bold")).pack(anchor="w")
+        ttk.Label(right, text="Results", style="Heading.TLabel").pack(anchor="w")
 
         # Eight 64px previews at 4x are ~2.5 screens tall, so the grid scrolls
         # rather than being clipped at the pane edge.
         canvas_holder = ttk.Frame(right)
         canvas_holder.pack(fill="both", expand=True, pady=(6, 0))
 
-        self.results_canvas = tk.Canvas(canvas_holder, borderwidth=0, highlightthickness=0)
+        self.results_canvas = tk.Canvas(
+            canvas_holder, borderwidth=0, highlightthickness=0, bg=self.palette.panel
+        )
         scrollbar = ttk.Scrollbar(
             canvas_holder, orient="vertical", command=self.results_canvas.yview
         )
@@ -283,11 +290,11 @@ class IconForgeApp:
     def _build_settings_tab(self) -> None:
         frame = self.settings_tab
 
-        ttk.Label(frame, text="Appearance", font=("", 11, "bold")).grid(
+        ttk.Label(frame, text="Appearance", style="Heading.TLabel").grid(
             row=0, column=0, columnspan=3, sticky="w"
         )
         self.template_path = self._add_path_row(
-            frame, 1, "Border template (64x64 PNG)", self._browse_image
+            frame, 1, "Border template (blank = built-in gold frame)", self._browse_image
         )
         self.output_dir = self._add_path_row(
             frame, 2, "Save icons to", self._browse_directory
@@ -307,7 +314,7 @@ class IconForgeApp:
         self.trigger_var = tk.StringVar(value=generate.DEFAULT_TRIGGER_WORD)
         ttk.Entry(trigger_row, textvariable=self.trigger_var, width=20).pack(side="left", padx=8)
 
-        ttk.Label(frame, text="Model", font=("", 11, "bold")).grid(
+        ttk.Label(frame, text="Model", style="Heading.TLabel").grid(
             row=5, column=0, columnspan=3, sticky="w", pady=(16, 4)
         )
         self.lora_path = self._add_path_row(
@@ -355,6 +362,7 @@ class IconForgeApp:
         holder = ttk.Frame(parent)
         holder.grid(row=row, column=0, columnspan=4, sticky="nsew", pady=(12, 0))
         text = tk.Text(holder, height=height, wrap="word", state="disabled")
+        theme.style_text(text)
         scroll = ttk.Scrollbar(holder, command=text.yview)
         text.configure(yscrollcommand=scroll.set)
         text.pack(side="left", fill="both", expand=True)
@@ -558,8 +566,13 @@ class IconForgeApp:
             photo = ImageTk.PhotoImage(preview)
             self._preview_images.append(photo)
 
-            ttk.Label(cell, image=photo, relief="solid", borderwidth=1).pack()
-            ttk.Label(cell, text=f"seed {result.seed}", foreground="#555555").pack()
+            # A one-pixel gold frame around each preview, matching the theme.
+            frame_border = tk.Frame(cell, background=self.palette.gold)
+            frame_border.pack()
+            tk.Label(
+                frame_border, image=photo, background=self.palette.panel, borderwidth=0
+            ).pack(padx=1, pady=1)
+            ttk.Label(cell, text=f"seed {result.seed}", style="Subtle.TLabel").pack()
 
             buttons = ttk.Frame(cell)
             buttons.pack(pady=2)

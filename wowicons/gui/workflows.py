@@ -20,6 +20,7 @@ from PIL import Image
 from .. import blp_writer, compositing, generate
 from ..captions import load_overrides
 from ..pipeline import DatasetOptions, build_dataset, format_category_counts
+from . import assets
 from .jobs import CancelledError, JobHandle
 
 __all__ = [
@@ -340,17 +341,22 @@ def run_generation(
     )
     handle.log(f"Using: {backend.name}")
 
-    template = None
     if settings.template_path:
         if not Path(settings.template_path).is_file():
             raise ValueError(f"Border template not found:\n{settings.template_path}")
         template = compositing.load_template(settings.template_path)
-        mask = compositing.content_mask_for(template)
-        if mask.has_empty_interior:
-            handle.log(
-                "Warning: that border template has no transparent middle, so the "
-                "artwork will be hidden behind it."
-            )
+    else:
+        # No template chosen: use the built-in gold frame rather than shipping
+        # bare squares. A real template can be picked in Settings at any time.
+        template = assets.default_border_template()
+        handle.log("Using the built-in gold border. Pick your own in Settings if you like.")
+
+    mask = compositing.content_mask_for(template)
+    if mask.has_empty_interior:
+        handle.log(
+            "Warning: that border template has no transparent middle, so the "
+            "artwork will be hidden behind it."
+        )
 
     def on_progress(progress: generate.GenerationProgress) -> None:
         handle.progress(progress.fraction, str(progress))
@@ -370,11 +376,7 @@ def run_generation(
 
     for item in icons:
         handle.raise_if_cancelled()
-        icon = (
-            compositing.composite_icon(item.image, template, options)
-            if template is not None
-            else item.image.resize((64, 64), Image.LANCZOS)
-        )
+        icon = compositing.composite_icon(item.image, template, options)
         results.append(
             GeneratedResult(icon=icon, art=item.image, seed=item.seed, prompt=item.prompt)
         )
