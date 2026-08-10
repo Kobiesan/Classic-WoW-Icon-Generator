@@ -10,7 +10,7 @@ Open `WowIconForge.sln` in Visual Studio 2022.
 | --- | --- | --- |
 | `src/WowIconForge.Core` | `net8.0` | Inference, compositing, BLP I/O. No UI dependencies. |
 | `src/WowIconForge.App` | `net8.0-windows` | WPF UI. |
-| `tests/WowIconForge.Core.Tests` | `net8.0` | xUnit. 148 tests. |
+| `tests/WowIconForge.Core.Tests` | `net8.0` | xUnit. 191 tests. |
 
 ## Status
 
@@ -24,6 +24,8 @@ BLP export testable before any model files exist.
 | BLP2 writer + BLP1/BLP2 reader | Implemented, 33 tests |
 | Median-cut quantizer, mipmaps | Implemented, 18 tests |
 | Generation, export, settings | Implemented, 67 tests |
+| Model download + verify, resolution | Implemented, 43 tests |
+| Publish + Inno Setup installer | Implemented, not compiled here |
 | ONNX denoise loop | **Not implemented** — `OnnxIconGenerator` throws |
 | WPF window | **Scaffold only** — layout is the next phase |
 
@@ -135,20 +137,105 @@ DPM++ 2M); the per-step U-Net loop applying classifier-free guidance; and a VAE
 decode to 512×512. Until then `OnnxIconGenerator.GenerateAsync` throws rather
 than pretending.
 
+## Packaging
+
+```powershell
+.\publish.ps1                                          # app only, small installer
+.\publish.ps1 -ModelsDirectory C:\sd15-onnx -Installer # models baked in, several GB
+.\publish.ps1 -Installer                               # small installer + Inno Setup
+```
+
+`publish.ps1` runs the tests, then publishes **self-contained win-x64** so the
+user needs no .NET install, and optionally compiles
+`installer/WowIconForge.iss` with Inno Setup 6.
+
+Deliberately **not** `PublishSingleFile`: ONNX Runtime and DirectML load native
+libraries by name, and single-file publishing forces an extract-to-temp step
+that is slower and breaks GPU enumeration on some drivers. Trimming is off for
+the same family of reasons — both ONNX Runtime and WPF resolve types by
+reflection, so a trimmed build fails at runtime rather than at publish.
+
+### The models, both ways
+
+The models are several gigabytes and cannot live in the executable. Both routes
+are supported, and the app does not care which one you used —
+`ModelDirectoryResolver` decides at startup:
+
+1. the directory configured in Settings, if complete;
+2. `<app folder>\models`, if the installer bundled one;
+3. `%LOCALAPPDATA%\WowIconForge\models`, which is what the wizard downloads into.
+
+The installer follows the same fork automatically. If the publish folder
+contains a `models` sub-folder, Inno packages it and installs it beside the exe,
+and first run is instant. If it does not, the installer stays small, tells the
+user at the end of setup what will happen, and the first-run wizard downloads
+instead.
+
+The download target is under LocalAppData rather than Program Files on purpose:
+the app installs per-machine, so writing gigabytes into its own folder would
+need elevation every time.
+
+### Downloading and verifying
+
+`ModelDownloader` reads `model-sources.json`, fetches each file to a `.part`
+name, checks its SHA-256, and only then moves it into place — so an interrupted
+download can never masquerade as a good one. Files already present and verified
+are skipped, which makes a failed install resumable rather than a 3 GB do-over.
+
+Two deliberate refusals:
+
+- **Unpinned entries are rejected by default.** An entry with no `sha256` cannot
+  be verified, and downloading gigabytes you cannot check is what the hash
+  exists to prevent. `allowUnpinned` overrides it explicitly.
+- **Paths that escape the model folder are rejected**, at parse time and again
+  at write time. A manifest is untrusted input that names files written to disk;
+  `../../Startup/evil.exe` must never be honoured.
+
+**`model-sources.json` ships as a template and will not download anything as
+shipped.** Its URLs are placeholders and every hash is empty, so the downloader
+refuses it outright. That is deliberate — I had no way to verify real URLs or
+compute real checksums, and a manifest with plausible-looking but unverified
+hashes is worse than one that obviously needs filling in. Two ways forward, both
+documented in the file itself: point the app at an export you already have, or
+fill in the URLs and hashes. `ModelDownloader.ComputeManifestAsync` generates a
+fully pinned manifest from a folder on disk, so you never have to hash by hand.
+
 ## Verification
 
 ```bash
-dotnet test tests/WowIconForge.Core.Tests     # 148 passed
+dotnet test tests/WowIconForge.Core.Tests     # 191 passed
 ```
 
-**Not verified here**: `WowIconForge.App` has never been compiled. This container
-runs Linux, WPF requires the WindowsDesktop SDK targets, and the Ubuntu-packaged
-.NET SDK omits them (`Microsoft.NET.Sdk.WindowsDesktop` is absent from the SDK
-layout, so even `dotnet sln add` rejects the project). The official SDK download
-is blocked by this environment's egress policy. The solution file therefore lists
-all three projects but was hand-written rather than generated, and the App
-project's first real build will be on your machine. Core and the tests are built
-and run in both Debug and Release.
+**Verified on Linux**, despite the Windows target: the publish flag combination
+(`-r win-x64 --self-contained -p:PublishReadyToRun=true`) produces a real
+187-file native output, Core publishes for win-x64 with its ImageSharp and ONNX
+Runtime assets intact, and the `VerifyDirectMLWasPublished` guard was exercised
+in both directions — it fails the publish when `DirectML.dll` is absent and
+passes when it is there.
+
+**Not verified here**: `WowIconForge.App` has never been compiled, and neither
+has the Inno Setup script. This container runs Linux; WPF requires the
+WindowsDesktop SDK targets, and the Ubuntu-packaged .NET SDK omits them
+(`Microsoft.NET.Sdk.WindowsDesktop` is absent from the SDK layout, so even
+`dotnet sln add` rejects the project), while the official SDK download is
+blocked by this environment's egress policy. PowerShell is not installed either,
+so `publish.ps1` has not been parsed. The solution file lists all three projects
+but was hand-written rather than generated. Core and the tests build and run in
+both Debug and Release.
+
+### One packaging bug this caught
+
+`DirectML.dll` was silently missing from the publish output. `Microsoft.AI.DirectML`
+ships it under `bin\x64-win\` rather than `runtimes\<rid>\native\`, so NuGet's
+automatic native-asset copying does not see it; the copy lives in the package's
+`build\*.targets`, and NuGet imports those only for **direct** references. Since
+the package arrives transitively through `Microsoft.ML.OnnxRuntime.DirectML`,
+nothing in the graph ever copied it, and the failure would only have surfaced as
+"DirectML doesn't work" on a user's machine.
+
+Fixed with a direct `PackageReference` in the App project, and the
+`VerifyDirectMLWasPublished` target now fails the publish if either
+`DirectML.dll` or `onnxruntime.dll` goes missing again.
 
 ## Dependency note
 

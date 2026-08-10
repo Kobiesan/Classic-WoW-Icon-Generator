@@ -1,0 +1,59 @@
+{
+  "name": "Stable Diffusion 1.5 (ONNX)",
+  "description": "Model files the first-run wizard downloads when none are installed.",
+
+  // ---------------------------------------------------------------------
+  // THIS FILE IS A TEMPLATE. It will not download anything as shipped.
+  //
+  // The urls below are placeholders, and every sha256 is empty, so the
+  // downloader refuses the manifest outright rather than fetching gigabytes it
+  // cannot verify. Two ways to make it real:
+  //
+  //  1. You already have an ONNX export on disk. Point the app at that folder
+  //     in Settings and you are done - no download, no manifest needed. To
+  //     publish it for other machines, generate a pinned manifest from it:
+  //         ModelDownloader.ComputeManifestAsync(template, @"C:\your\models")
+  //     which fills in every sha256 and sizeBytes from the actual files.
+  //
+  //  2. You want the wizard to fetch them. Replace <owner>/<repo> with the
+  //     Hugging Face repository holding an ONNX export of your checkpoint,
+  //     then paste each file's sha256. Hugging Face shows the SHA-256 on each
+  //     file's page, and `certutil -hashfile <file> SHA256` prints it locally.
+  //
+  // Do not fill in the urls and leave the hashes blank. The hash is the only
+  // thing standing between a truncated or swapped download and your GPU.
+  // ---------------------------------------------------------------------
+
+  "files": [
+    {
+      "relativePath": "unet/model.onnx",
+      "url": "https://huggingface.co/<owner>/<repo>/resolve/main/unet/model.onnx",
+      "sha256": "",
+      "sizeBytes": 0
+    },
+    {
+      "relativePath": "vae_decoder/model.onnx",
+      "url": "https://huggingface.co/<owner>/<repo>/resolve/main/vae_decoder/model.onnx",
+      "sha256": "",
+      "sizeBytes": 0
+    },
+    {
+      "relativePath": "text_encoder/model.onnx",
+      "url": "https://huggingface.co/<owner>/<repo>/resolve/main/text_encoder/model.onnx",
+      "sha256": "",
+      "sizeBytes": 0
+    },
+    {
+      "relativePath": "tokenizer/vocab.json",
+      "url": "https://huggingface.co/<owner>/<repo>/resolve/main/tokenizer/vocab.json",
+      "sha256": "",
+      "sizeBytes": 0
+    },
+    {
+      "relativePath": "tokenizer/merges.txt",
+      "url": "https://huggingface.co/<owner>/<repo>/resolve/main/tokenizer/merges.txt",
+      "sha256": "",
+      "sizeBytes": 0
+    }
+  ]
+}

@@ -17,4 +17,11 @@
     <ProjectReference Include="..\..\src\WowIconForge.Core\WowIconForge.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- So the shipped manifest is validated by the test suite, not just by eye. -->
+    <Content Include="..\..\model-sources.json" Link="model-sources.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
