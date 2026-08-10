@@ -1,18 +1,62 @@
-# Classic WoW Icon Generator — dataset pipeline
+# Classic WoW Icon Generator
 
-Turns a directory of `.blp` icons extracted from a WoW client
-(`Interface/Icons`) into a kohya_ss training folder for a Stable Diffusion
-LoRA: 512×512 PNGs, one `.txt` caption per image, and a `manifest.csv` you can
-audit.
+Generate World of Warcraft-style icons: build a training dataset from real WoW
+icon art, train a LoRA on it, then make new icons from text prompts.
+
+## Start here: the app
 
 ```bash
 pip install -r requirements.txt
+python -m wowicons.gui
+```
 
-python -m wowicons \
-    --input  /path/to/extracted/Interface/Icons \
-    --output ./dataset \
-    --overrides overrides.json \
-    --min-size 64
+One window, three numbered tabs in the order you use them.
+
+![The Generate tab](docs/generate-tab.png)
+
+| Tab | What it does | What you need |
+| --- | --- | --- |
+| **1. Dataset** | Turns a folder of `.blp` icons into training material | `.blp` files extracted from a WoW client |
+| **2. Train** | Teaches a model your icon style | A graphics card, plus [sd-scripts](https://github.com/kohya-ss/sd-scripts) |
+| **3. Generate** | Makes new icons from a prompt, borders and all | Nothing to start - see below |
+
+Nothing needs a terminal after the first line. Every long job runs in the
+background with a progress bar and a Cancel button, every error is a sentence
+rather than a stack trace, and the folders you pick are remembered.
+
+**The Generate tab works immediately**, before you have trained anything. With
+no model installed it runs in *preview mode*: the shapes are placeholders, but
+the border compositing, the 4x pixel-crisp previews, and PNG/BLP saving are all
+real. That is enough to set up your border template and check the pipeline end
+to end. Install PyTorch and diffusers, point Settings at a trained
+`.safetensors`, and the same button produces real art.
+
+### Making generation real
+
+```bash
+# 1. PyTorch, matched to your graphics card - pick the command at:
+#    https://pytorch.org/get-started/locally/
+# 2. then:
+pip install ".[generate]"
+```
+
+Then on the Settings tab, choose the `.safetensors` file that training produced.
+The Train tab writes it to `<your dataset>/model/`.
+
+No ONNX export step is needed: the LoRA loads straight onto a base checkpoint.
+
+## Command line
+
+Everything the app does is also scriptable.
+
+```bash
+python -m wowicons --input /path/to/Interface/Icons --output ./dataset \
+                   --overrides overrides.json
+
+python -m wowicons.prompts --manifest dataset/manifest.csv \
+                           --output training/sample_prompts.txt
+
+SD_SCRIPTS=~/src/sd-scripts ./training/train_lora.sh
 ```
 
 ## What it does
@@ -158,6 +202,10 @@ deltas.
 | `wowicons/pipeline.py` | Walk, decode, upscale, write PNG/TXT, manifest, counts. |
 | `wowicons/cli.py` | argparse front end. |
 | `wowicons/prompts.py` | `manifest.csv` → `sample_prompts.txt` for per-epoch previews. |
+| `wowicons/compositing.py` | Content mask, Lanczos downscale, unsharp, border compositing. |
+| `wowicons/blp_writer.py` | BLP2 writer: palettized, 8-bit alpha, full mip chain. |
+| `wowicons/generate.py` | Generation backends: preview stub and Stable Diffusion. |
+| `wowicons/gui/` | The desktop app. `jobs`, `environment` and `workflows` are display-free. |
 
 `blp.py` is deliberately isolated for the planned C# port: it has no
 third-party imports at module level (a test enforces this), keeps the header
@@ -171,6 +219,11 @@ its own image library there and can lift the rest as-is.
 ```bash
 python -m pytest
 ```
+
+321 tests. The window itself is exercised under a virtual display, so the
+results grid, validation messages and a full generate-and-render cycle are
+covered rather than assumed; on an interpreter without tkinter those tests skip
+and the other 283 still run.
 
 The suite covers the parser against real `Interface/Icons` filenames, override
 handling, the decoder against synthesized BLP1/BLP2 payloads for every
